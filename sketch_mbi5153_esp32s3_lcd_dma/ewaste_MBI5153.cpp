@@ -9,10 +9,10 @@ static const char *TAG = "mbi5153";
 void mbi_clock(uint8_t clock) {
   while (clock--) {
     gpio_set_level((gpio_num_t)MBI_DCLK, 1);
-    gpio_set_level((gpio_num_t)MBI_GCLK, 1); // gclk is overridden by DMA, so this won't do anything anyway. 
-    esp_rom_delay_us(clock_delay);
+//    gpio_set_level((gpio_num_t)MBI_GCLK, 1); // gclk is overridden by DMA, so this won't do anything anyway. 
+//    esp_rom_delay_us(clock_delay);
     gpio_set_level((gpio_num_t)MBI_DCLK, 0);
-    gpio_set_level((gpio_num_t)MBI_GCLK, 0);
+//    gpio_set_level((gpio_num_t)MBI_GCLK, 0);
   }
 }
 

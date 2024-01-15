@@ -9,10 +9,10 @@
 #include "esp_log.h"
 #include "esp_task_wdt.h"
 #include "driver/ledc.h"
-#include "driver/rmt_tx.h"
+//#include "driver/rmt_tx.h"
 
-#define ghost_elimination_ON    0b11   //послесвечение выключенно
-#define ghost_elimination_OFF   0   //послесвечение включено
+#define ghost_elimination_ON    1   //enable
+#define ghost_elimination_OFF   0   //disable
 #define gray_scale_13           1   //шкала серого 13 бит
 #define gray_scale_14           0   //шкала серого 14 бит
 

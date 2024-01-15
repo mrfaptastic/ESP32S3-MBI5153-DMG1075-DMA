@@ -11,6 +11,11 @@
 #include "esp32s3_peripheral.h"
 #include "test_pattern.h"
 #include "dma_data.h"
+#include "Fastnoise.h"
+
+//#include "wificonnect.h"
+//#include "e131.h"
+
 
 #define GCLK_ADDR_MODE_DMA 1
 
@@ -21,6 +26,21 @@
 static const char *TAG  = "app_main";
 volatile int refresh    = 0;
 volatile int image      = 0;
+
+uint8_t wsRawData[80 * 80 * 4];
+
+//E131 e131;
+
+FastNoiseLite noise;
+
+int simplexColorR = 0;
+int simplexColorG = 209;
+int simplexColorB = 255;
+
+int simplexBrightness = -33;
+float simplexContrast = 72;
+float simplexScale = 5;
+float simplexSpeed = 20;
 
 bool alloc_dma_data_buffer() 
 { 
@@ -95,7 +115,24 @@ bool configure_dma_gclk()
 // Start the App
 void setup(void)
 {
-    Serial.begin(112500);
+//    Serial.begin(115200);
+
+//    connectWiFi();
+
+//    e131.begin();
+
+    //Noise settings
+    noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2S);
+    noise.SetRotationType3D(FastNoiseLite::RotationType3D_ImproveXYPlanes);
+    noise.SetFrequency(.0004);
+    //   noise.SetFractalType(FastNoiseLite::FractalType_FBm);
+    //   noise.SetFractalLacunarity(2.7);
+    //   noise.SetFractalOctaves(6);
+    //   noise.SetFractalGain(0.1);
+    //   noise.SetFractalLacunarity(2.7);
+    //   noise.SetFractalWeightedStrength(.1);
+    noise.SetDomainWarpType(FastNoiseLite::DomainWarpType_OpenSimplex2);
+    noise.SetDomainWarpAmp(240);
 
     ESP_LOGD(TAG, "Configure GPIOs");     
        
@@ -104,7 +141,7 @@ void setup(void)
     
     esp_task_wdt_deinit();
       
-
+    delay(2);
  
     #if (GCLK_ADDR_MODE == GCLK_ADDR_MODE_DMA)
 
@@ -131,10 +168,27 @@ int row = 0;
 unsigned long  last_display  = 0;
 void loop()
 {
-
     if (refresh)
     {
-
+//        for (int i = 0; i < 80; i++) {
+//          for (int j = 0; j < 80; j++) {
+//            int col = int((1 + noise.GetNoise(j * simplexScale * 10, i * simplexScale * 10, float(millis() * simplexSpeed / 50))) * 127);
+//            col += simplexBrightness;
+//            col = constrain(col, 0, 255);
+//            float contrastFactor = (259 * (simplexContrast + 255)) / (255 * (259 - simplexContrast));
+//            col = contrastFactor * (col - 128) + 128;
+//            col = constrain(col, 0, 255);
+//            
+//            int index = (i * 80 + j) * 4;
+//            wsRawData[index] = uint8_t(col * simplexColorB / 255.0f); // Blue
+//            wsRawData[index + 1] = uint8_t(col * simplexColorG / 255.0f); // Green
+//            wsRawData[index + 2] = uint8_t(col * simplexColorR / 255.0f); // Red
+//            wsRawData[index + 3]     = 0xFF; // blank
+//          }
+//        }
+//        mbi_set_frame_lvgl_rgb(wsRawData);
+      
+//
       if (image > 2) image = 0;
       
       switch (image)
@@ -175,4 +229,3 @@ void loop()
 
     }    
 }
-
