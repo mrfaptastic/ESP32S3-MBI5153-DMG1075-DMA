@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <iostream>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -41,6 +42,13 @@ int simplexBrightness = -33;
 float simplexContrast = 72;
 float simplexScale = 5;
 float simplexSpeed = 20;
+
+int row = 0;
+
+unsigned long  last_display  = 0;
+
+unsigned long dma_delay = 5;
+unsigned long dma_delay_last = 0;
 
 bool alloc_dma_data_buffer() 
 { 
@@ -115,7 +123,10 @@ bool configure_dma_gclk()
 // Start the App
 void setup(void)
 {
-//    Serial.begin(115200);
+  delay(4000);
+  //  Serial.begin(115200);
+
+  // Serial.setDebugOutput(true);
 
 //    connectWiFi();
 
@@ -139,7 +150,7 @@ void setup(void)
     setup_gpio_dir();
     setup_gpio_output();    
     
-    esp_task_wdt_deinit();
+    // esp_task_wdt_deinit();
       
     delay(2);
  
@@ -153,7 +164,7 @@ void setup(void)
         // Confiure register1
         mbi_soft_reset();    
         mbi_pre_active(); // must      
-        mbi_configuration(ghost_elimination_ON,(PANEL_SCAN_LINES-1),gray_scale_14,gclk_multiplier_OFF,current_1);  
+        mbi_configuration(ghost_elimination_ON,(PANEL_SCAN_LINES-1),gray_scale_14,gclk_multiplier_OFF,current_max);  
 
         // Configure register 2
         mbi_pre_active(); // must          
@@ -163,43 +174,41 @@ void setup(void)
 
 }
 
-
-int row = 0;
-unsigned long  last_display  = 0;
 void loop()
 {
     if (refresh)
     {
-//        for (int i = 0; i < 80; i++) {
-//          for (int j = 0; j < 80; j++) {
-//            int col = int((1 + noise.GetNoise(j * simplexScale * 10, i * simplexScale * 10, float(millis() * simplexSpeed / 50))) * 127);
-//            col += simplexBrightness;
-//            col = constrain(col, 0, 255);
-//            float contrastFactor = (259 * (simplexContrast + 255)) / (255 * (259 - simplexContrast));
-//            col = contrastFactor * (col - 128) + 128;
-//            col = constrain(col, 0, 255);
-//            
-//            int index = (i * 80 + j) * 4;
-//            wsRawData[index] = uint8_t(col * simplexColorB / 255.0f); // Blue
-//            wsRawData[index + 1] = uint8_t(col * simplexColorG / 255.0f); // Green
-//            wsRawData[index + 2] = uint8_t(col * simplexColorR / 255.0f); // Red
-//            wsRawData[index + 3]     = 0xFF; // blank
-//          }
-//        }
-//        mbi_set_frame_lvgl_rgb(wsRawData);
+       for (int i = 0; i < 80; i++) {
+         for (int j = 0; j < 80; j++) {
+           int col = int((1 + noise.GetNoise(j * simplexScale * 10, i * simplexScale * 10, float(millis() * simplexSpeed / 50))) * 127);
+           col += simplexBrightness;
+           col = constrain(col, 0, 255);
+           float contrastFactor = (259 * (simplexContrast + 255)) / (255 * (259 - simplexContrast));
+           col = contrastFactor * (col - 128) + 128;
+           col = constrain(col, 0, 255);
+           
+           int index = (i * 80 + j) * 4;
+           wsRawData[index] = uint8_t(col * simplexColorB / 255.0f); // Blue
+           wsRawData[index + 1] = uint8_t(col * simplexColorG / 255.0f); // Green
+           wsRawData[index + 2] = uint8_t(col * simplexColorR / 255.0f); // Red
+           wsRawData[index + 3] = 0xFF; // blank
+         }
+       }
+       mbi_set_frame_lvgl_rgb(wsRawData);
+    
       
-//
-      if (image > 2) image = 0;
+      // if (image > 2) image = 0;
       
-      switch (image)
-      {
-          case 0: mbi_set_frame_lvgl_rgb(test_pattern_1); // house
-                  break;
-          case 1: mbi_set_frame_lvgl_rgb(test_pattern_2); // lines
-                  break;
-          case 2: mbi_set_frame_lvgl_rgb(test_pattern_3); // text
-                  break;
-      }
+      // switch (image)
+      // {
+      //     case 0: mbi_set_frame_lvgl_rgb(test_pattern_1); // house
+      //             break;
+      //     case 1: mbi_set_frame_lvgl_rgb(test_pattern_2); // lines
+      //             break;
+      //     case 2: mbi_set_frame_lvgl_rgb(test_pattern_3); // text
+      //             break;
+      // }
+      //   image++;
 
         dma_bus.dma_transfer_stop();          
 
@@ -209,17 +218,18 @@ void loop()
          * Not sure what SRCLK does either, but toggling it high and then low around time of greyscale data transfer stops visible noise showing.
          */
         gpio_set_level(MBI_SRCLK,  1);
-        delay(2);     
+        dma_delay_last = millis();
+        while(millis() - dma_delay_last < dma_delay) {};
         mbi_v_sync(); 
         dma_bus.dma_transfer_start();
         gpio_set_level(MBI_SRCLK,  0);  
 
-        image++;
         refresh = 0;
     }
+    
 
 
-    if ((millis() - last_display) > 1000)  {
+    if ((millis() - last_display) > 0)  {
     
         last_display = millis();
   

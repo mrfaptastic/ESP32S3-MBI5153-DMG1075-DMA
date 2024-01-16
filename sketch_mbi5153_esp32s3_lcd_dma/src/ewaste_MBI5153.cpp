@@ -35,6 +35,7 @@ void mbi_v_sync() {
   gpio_set_level((gpio_num_t)MBI_LAT, 1);
   mbi_clock(2);
   gpio_set_level((gpio_num_t)MBI_LAT, 0);
+  mbi_clock(2);
 }
 
 /*soft reset*/
@@ -54,12 +55,13 @@ new “Vsync” command is received.
 /*настройка регистра конфигурации*/
 void mbi_configuration(uint8_t ghost_elimination, uint8_t line_num, uint8_t gray_scale, uint8_t gclk_multiplier, uint8_t current) {
   uint16_t config_reg1_val = 0;
-  //config_reg1_val = (config_reg1_val | (ghost_elimination << 15) | (line_num << 8) | (gray_scale << 7) | (gclk_multiplier << 6) | (current));
+  
+  config_reg1_val = 0b1001001110101011;
 
-  //Documentation says set bits E and F of Config1 Reg to 1
-  config_reg1_val = (config_reg1_val | (ghost_elimination << 14) | (line_num << 8) | (gray_scale << 7) | (gclk_multiplier << 6) | (current));
+  //Documentation says set bits E and F of Config1 Reg to 0
+  // config_reg1_val = (config_reg1_val | (ghost_elimination << 14) | (line_num << 8) | (gray_scale << 7) | (gclk_multiplier << 6) | (current));
 
-  ESP_LOGD(TAG, "Reg value. %u", config_reg1_val);
+  ESP_LOGD(TAG, "Reg1 value. %u", config_reg1_val);
 
   for (int i = 0; i < PANEL_MBI_LENGTH; i++)
     mbi_send_config(config_reg1_val, (i == (PANEL_MBI_LENGTH - 1)));  // on last panel, latch
@@ -73,7 +75,7 @@ void mbi_configuration2()
 
   uint16_t config_reg2_val = 0b0001000000010000; // default value apparently
 
-  config_reg2_val = 0b1001000000011110; // removes ghosting except for red
+  // config_reg2_val = 0b1001000000011110; // removes ghosting except for red
 
   ESP_LOGD(TAG, "Reg2 value. %u", config_reg2_val);
   
@@ -162,12 +164,6 @@ void mbi_send_config(uint16_t config_reg, bool latch, bool reg2) {
 
   // ESP_LOGD(TAG, "Completed MBI config sending. Latch is now low.");
 }
-
-
-
-
-
-
 
 /*transfer 2 bytes of data to the MBI5153 driver*/
 void mbi_send_data_test(uint16_t data, bool latch) {
@@ -258,7 +254,7 @@ void mbi_set_frame_lvgl_rgb(const uint8_t *rgb_888_data) {
 
         b4_data = lumConvTab[b4_data];
         g4_data = lumConvTab[g4_data];
-        r4_data = lumConvTab[r4_data];
+        r4_data = lumConvTab[r4_data];  
 
 
         // CF_TRUE_COLOR byte order is B,G,R,0xff

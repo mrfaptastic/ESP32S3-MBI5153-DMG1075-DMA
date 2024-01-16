@@ -26,10 +26,9 @@ GCLK multiplier enabled (configuration register1 bit [6] = 1)
 
 #define gclk_multiplier_ON      1   // GCLK Multipler On - You MUST use exactly 257 clocks for each rowscan!
 #define gclk_multiplier_OFF     0   // GCLK Multipler On - You MUST use exactly 513 clocks for each rowscan!
-#define current_1               15  //ток на светодиоде
-#define current_2               63  //ток на светодиоде
-#define current_3               35  //ток на светодиоде
-#define current_4               20  //LED current
+#define current_min             0   //12.5%
+#define current_def             32  //106%
+#define current_max             64  //200%
 
 #define clock_delay             0
 #define pwm_hi                  65535  
